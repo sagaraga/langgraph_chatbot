@@ -1,5 +1,5 @@
 import streamlit as st
-from c_chatbot_backend_db import chat_bot, retrieve_all_threads
+from d_chatbot_backend_tool import chat_bot, retrieve_all_threads
 from langchain_core.messages import HumanMessage, AIMessage
 import uuid
 
@@ -91,12 +91,25 @@ if user_input:
 
 
     # st.session_state["messages"].append({"role": "assistant", "content": ai_message})
+    # with st.chat_message("assistant"):
+    #     ai_message = st.write_stream(
+    #         chatbot_stream.content for chatbot_stream, metadata in chat_bot.stream(
+    #             {'messages': [HumanMessage(content=user_input)]},
+    #             config=CONFIG,
+    #             stream_mode='messages'
+    #         )
+    #     )
+    #     st.session_state["messages"].append({"role": "assistant", "content": ai_message})
+
     with st.chat_message("assistant"):
-        ai_message = st.write_stream(
-            chatbot_stream.content for chatbot_stream, metadata in chat_bot.stream(
+        def ai_message_only():
+            for message_chunk, metadata in chat_bot.stream(
                 {'messages': [HumanMessage(content=user_input)]},
                 config=CONFIG,
                 stream_mode='messages'
-            )
-        )
+            ):
+                if isinstance(message_chunk, AIMessage):
+                    yield message_chunk.content
+
+        ai_message = st.write_stream(ai_message_only())
         st.session_state["messages"].append({"role": "assistant", "content": ai_message})
